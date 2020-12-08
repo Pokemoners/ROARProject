@@ -7,6 +7,8 @@ from ROAR_Sim.carla_client.carla_runner import CarlaRunner
 from ROAR.agent_module.pure_pursuit_agent import PurePursuitAgent
 # from ROAR.agent_module.point_cloud_agent import PointCloudAgent
 from ROAR.configurations.configuration import Configuration as AgentConfig
+from ROAR.agent_module.special_agents.waypoint_generating_agent import WaypointGeneratigAgent
+from ROAR.agent_module.pid_agent import PIDAgent
 
 
 def main():
@@ -18,9 +20,8 @@ def main():
                                npc_agent_class=PurePursuitAgent)
     try:
         my_vehicle = carla_runner.set_carla_world()
-        agent = PurePursuitAgent(vehicle=my_vehicle, agent_settings=agent_config)
-
-        carla_runner.start_game_loop(agent=agent, use_manual_control=True)
+        agent = PIDAgent(vehicle=my_vehicle, agent_settings=agent_config)
+        carla_runner.start_game_loop(agent=agent, use_manual_control=False)
     except Exception as e:
         logging.error(f"Something bad happened during initialization: {e}")
         carla_runner.on_finish()
@@ -28,8 +29,8 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s - %(name)s '
-                               '- %(levelname)s - %(message)s',
+    logging.basicConfig(format='%(levelname)s - %(asctime)s - %(name)s '
+                               '- %(message)s',
                         level=logging.DEBUG)
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
     warnings.simplefilter("ignore")
