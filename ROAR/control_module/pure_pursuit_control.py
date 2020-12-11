@@ -17,7 +17,7 @@ class PurePursuitController(Controller):
             agent: Agent,
             look_ahead_gain: float = 0.1,
             look_ahead_distance: float = 2,
-            target_speed=60,
+            target_speed=150,
     ):
         """
 

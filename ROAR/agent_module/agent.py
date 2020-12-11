@@ -44,6 +44,8 @@ class Agent(ABC):
 
         self.output_folder_path = \
             Path(self.agent_settings.output_data_folder_path)
+        if self.output_folder_path.exists() is False:
+            self.output_folder_path.mkdir(parents=True, exist_ok=True)
         self.front_depth_camera_output_folder_path = \
             self.output_folder_path / "front_depth"
         self.front_rgb_camera_output_folder_path = \

@@ -14,6 +14,7 @@ from pathlib import Path
 
 
 class PIDController(Controller):
+
     def __init__(self, agent, steering_boundary: Tuple[float, float],
                  throttle_boundary: Tuple[float, float], **kwargs):
         super().__init__(agent, **kwargs)
@@ -27,20 +28,37 @@ class PIDController(Controller):
         self.lat_pid_controller = LatPIDController(
             agent=agent,
             config=self.config["latitudinal_controller"],
-            steering_boundary=steering_boundary
+            steering_boundary= (-0.12, 0.12)
         )
         self.logger = logging.getLogger(__name__)
 
     def run_in_series(self, next_waypoint: Transform, **kwargs) -> VehicleControl:
+        y = 0
         throttle = self.long_pid_controller.run_in_series(next_waypoint=next_waypoint,
                                                           target_speed=kwargs.get("target_speed", self.max_speed))
         steering = self.lat_pid_controller.run_in_series(next_waypoint=next_waypoint)
+        if abs(steering) <= 0.02:
+            throttle += 0.01
+        if (abs(steering) >= 0.06 and Vehicle.get_speed(self.agent.vehicle) > 100):
+            throttle = -1
+        if next_waypoint.location.y > 1: 
+            throttle = 0.9
+            if (next_waypoint.location.y > 1 and next_waypoint.location.x > 10):
+                throttle = 1
+        if (next_waypoint.location.z < -60 and next_waypoint.location.y < 0):
+            throttle = 1
+            
+     
+
+
+        
         return VehicleControl(throttle=throttle, steering=steering)
+
 
     @staticmethod
     def find_k_values(vehicle: Vehicle, config: dict) -> np.array:
         current_speed = Vehicle.get_speed(vehicle=vehicle)
-        k_p, k_d, k_i = 1, 0, 0
+        k_p, k_d, k_i = 2, 0, 0
         for speed_upper_bound, kvalues in config.items():
             speed_upper_bound = float(speed_upper_bound)
             if current_speed < speed_upper_bound:
@@ -102,7 +120,7 @@ class LatPIDController(Controller):
             z=math.sin(math.radians(self.agent.vehicle.transform.rotation.pitch)),
         )
         v_vec = np.array([v_end.x - v_begin.x, v_end.y - v_begin.y, v_end.z - v_begin.z])
-
+        y = v_vec[2]
         # calculate error projection
         w_vec = np.array(
             [
